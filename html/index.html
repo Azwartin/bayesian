@@ -3,8 +3,7 @@
 	<head>
 		<title>Socket Name Classifier</title>
 		<style>
-			.results p {
-				display: inline-block;
+			.results > div {
 				width: 30%;
 				font-weight: bold;
 				color: #EEEEEE;
@@ -46,7 +45,7 @@
 		  	  })
 
 		  socket.on('postClass', function (data) {
-		    resultField.innerHTML = '<p class = ' + (data.class == 'f' ? 'female' : 'male') + '>' + data.name + ' ' + data.class + '</p>' + resultField.innerHTML;
+		    resultField.innerHTML = '<div class = ' + (data.class == 'f' ? 'female' : 'male') + '>' + data.name + ' ' + data.class + '</div>' + resultField.innerHTML;
 		  });
 		</script>
 	</body>

@@ -1,26 +1,29 @@
-var http = require('http'),
-	io = require('socket.io'),
+var port = 8080,
+	app = require('express')(),
+	http = require('http').Server(app),
+	io = require('socket.io')(http),
 	TrainSampler = require('./trainsampler'),
 	Bayesian = require('./baes'),
-	bayesian = new Bayesian(),
-	trainSampler = new TrainSampler();
+	Checker = require('./checker'),
+	trainSampler = new TrainSampler(),
+	bayesian = new Bayesian()
+	checker = new Checker();
 
-console.log(JSON.stringify(bayesian));
-console.log(bayesian);
 if(!bayesian.load()) {
 	bayesian.train(trainSampler.getSamples(bayesian.getFeatures));
-	console.log(JSON.stringify(bayesian));
-	console.log(bayesian);
 	bayesian.save();
 }
 
-var server = http.createServer(function(req, res) {}).listen(8080);
-io = io.listen(server);
+console.log(checker.check(bayesian));
 
-io.sockets.on('connection', function (socket) {
+app.get('/', function(req, res) {
+	res.sendFile(__dirname + '/html/index.html');
+});
+
+io.on('connection', function (socket) {
   socket.on('postName', function (data) {
     console.log(data.name);
-    socket.emit('postClass', {name:data.name, class:bayesian.classify(bayesian.getFeatures(data.name))});
+    socket.emit('postClass', {name:data.name, class:bayesian.classify(data.name)});
   });
 
   socket.on('disconnect', function () {
@@ -28,4 +31,6 @@ io.sockets.on('connection', function (socket) {
   });
 });
 
-console.log('Running');
+http.listen(port, function(){
+	console.log('Listen: ' + port);
+});

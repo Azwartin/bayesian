@@ -1,8 +1,8 @@
 var fs = require('fs'),
 	Bayesian = function() {
-	this.classes = [];
-	this.frequencies = [];
-	this.samplesCount = 0;
+		this.classes = {};
+		this.frequencies = {};
+		this.samplesCount = 0;
 }
 
 /*
@@ -12,18 +12,16 @@ var fs = require('fs'),
 	]
  ]
 */
-Bayesian.prototype.classify = function(feats) {
-	var complianceDegrees = this._calculateComplianceDegrees(feats);
+Bayesian.prototype.classify = function(name) {
+	var complianceDegrees = this._calculateComplianceDegrees(this.getFeatures(name));
 	return this._classOfMinDegree(complianceDegrees);
 }
 
 Bayesian.prototype._calculateComplianceDegrees = function(feats) {
 	var classID, featID,
 		defaultFreq = Math.pow(10, -7), 
-		result = [], currentFreq = 0,
+		result = {}, currentFreq = 0,
 		currentLetter;
-
-	console.log(feats);
 
 	for(classID in this.classes) {
 		result[classID] = - Math.log(this.classes[classID]);
@@ -51,8 +49,6 @@ Bayesian.prototype._classOfMinDegree = function(complianceDegrees) {
 		minClassID = false,
 		classID;
 
-	console.log(complianceDegrees);
-
 	for(classID in complianceDegrees) {
 		if(complianceDegrees[classID] < minDegree) {
 			minClassID = classID;
@@ -66,12 +62,13 @@ Bayesian.prototype._classOfMinDegree = function(complianceDegrees) {
 Bayesian.prototype.train = function(samples) {// получаем таблицу частот признаков
 	this._frequencyCount(samples);
 	this._normalize();
+	console.log('Trained');
 }
 
 Bayesian.prototype._frequencyCount = function(samples) {
 	var classID, feats, featID,
 		i = 0, len = samples.length,
-		classes = [], freq = [],
+		classes = {}, freq = {},
 		currentFreqCounter, currentFreq, currentFeatures;
 
 	for(i = 0; i < len; i++) {// считаем частоты фич для классов
@@ -79,9 +76,9 @@ Bayesian.prototype._frequencyCount = function(samples) {
 		if (!classes[classID]) {
 			classes[classID] = 1;
 			freq[classID] = {
-				ll:[],
-				fl:[],
-				sl:[]
+				ll:{},
+				fl:{},
+				sl:{}
 			};
 		} else {
 			classes[classID] += 1;
@@ -97,13 +94,6 @@ Bayesian.prototype._frequencyCount = function(samples) {
 			}
 		}
 	}
-
-	console.log(' ');
-	console.log(' ');
-	console.log(' ');
-	console.log(' ');
-	console.log(classes);
-	console.log(freq);
 
 	this.classes = classes;
 	this.frequencies = freq;
@@ -125,10 +115,6 @@ Bayesian.prototype._normalize = function() {
 	for(classID in this.classes) {
 		this.classes[classID] /= this.samplesCount;
 	}
-
-	console.log(' ');
-	console.log(this.classes);
-	console.log(this.frequencies);
 }
 
 Bayesian.prototype.getFeatures = function(word) {
@@ -145,16 +131,19 @@ Bayesian.prototype.getFeatures = function(word) {
 }
 
 Bayesian.prototype.save = function() {
+	console.log(this.classes);
+	console.log(JSON.stringify(this.classes));
 	fs.writeFileSync('data/data.json', JSON.stringify(this), 'utf8');
+	console.log('Saved');
 }
 
 Bayesian.prototype.load = function() {
 	try {
 		var data = JSON.parse(fs.readFileSync('data/data.json'));
 		this.classes = data.classes;
-		console.log(data);
 		this.frequencies = data.frequencies;
 		this.samplesCount = data.samplesCount;
+		console.log('Loaded');
 	} catch (e) {
 		return false;
 	}
